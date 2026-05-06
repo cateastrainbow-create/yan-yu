@@ -1,0 +1,191 @@
+@import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500&display=swap');
+
+@theme {
+  --color-paper: #F4F1EA;
+  --color-ink: #333333;
+  --color-ink-light: #555555;
+  --color-water: #D1D9E0;
+  
+  --font-serif: "Cormorant Garamond", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-sans: "Noto Sans SC", ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  margin: 0;
+  overflow: hidden; /* App takes full screen, no global scroll */
+}
+
+/* Paper Texture overlay */
+.paper-texture::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.05;
+  z-index: 1000;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+/* Leaflet Map overrides for minimalist look */
+.leaflet-container {
+  background: transparent !important;
+}
+.leaflet-control-container {
+  display: none !important; /* Hide zoom controls for cleaner look */
+}
+
+/* Leaflet tile layer minimal paper style */
+.leaflet-tile-pane {
+  filter: sepia(0.2) contrast(0.9) brightness(1.05) saturate(0.6) opacity(0.8);
+}
+
+/* Ink Halo Animation */
+@keyframes breathe {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.3; }
+  50% { transform: translate(-50%, -50%) scale(1.5); opacity: 0.1; }
+}
+
+.halo-ring {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 30px; height: 30px;
+  background: radial-gradient(circle, rgba(51,51,51,0.2) 0%, rgba(51,51,51,0) 70%);
+  border-radius: 50%;
+  animation: breathe 3s infinite ease-in-out;
+  pointer-events: none;
+}
+
+.ink-halo-marker-best .halo-ring {
+  width: 50px; height: 50px;
+}
+
+.center-dot {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px; height: 8px;
+  border: 1.5px solid #333;
+  background-color: rgba(255, 255, 255, 0.6);
+  border-radius: 50%;
+  filter: blur(0.3px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.focus-corners {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px; height: 16px;
+  opacity: 0;
+  transition: all 0.3s;
+  pointer-events: none;
+}
+.focus-corners span {
+  position: absolute;
+  width: 4px; height: 4px;
+  border-color: #d13a3a;
+  border-style: solid;
+}
+.focus-corners .tl { top: 0; left: 0; border-width: 1px 0 0 1px; }
+.focus-corners .tr { top: 0; right: 0; border-width: 1px 1px 0 0; }
+.focus-corners .bl { bottom: 0; left: 0; border-width: 0 0 1px 1px; }
+.focus-corners .br { bottom: 0; right: 0; border-width: 0 1px 1px 0; }
+
+.ink-halo-marker-selected .focus-corners {
+  opacity: 1;
+  width: 20px; height: 20px;
+}
+
+.ink-halo-marker-selected .center-dot {
+  background-color: #d13a3a;
+  border-color: #d13a3a;
+  transform: translate(-50%, -50%);
+  filter: blur(0px) drop-shadow(0px 3px 3px rgba(0,0,0,0.3));
+}
+
+.ink-halo-marker-selected .halo-ring {
+  background: radial-gradient(circle, rgba(209,58,58,0.2) 0%, rgba(209,58,58,0) 70%);
+}
+
+.departure-avatar-icon {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -100%);
+  filter: drop-shadow(0 4px 4px rgba(0,0,0,0.15));
+  animation: hovering 3s infinite ease-in-out;
+  color: var(--color-ink);
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(2px);
+  border-radius: 50%;
+  padding: 2px;
+}
+
+@keyframes hovering {
+  0%, 100% { transform: translate(-50%, -100%); }
+  50%      { transform: translate(-50%, calc(-100% - 3px)); }
+}
+
+.departure-base-dot {
+  position: absolute;
+  bottom: -2px; left: 50%;
+  transform: translateX(-50%);
+  width: 8px; height: 3px;
+  background-color: rgba(51,51,51,0.2);
+  border-radius: 50%;
+  filter: blur(0.5px);
+}
+
+.travel-path {
+  stroke-linecap: round;
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.1));
+}
+
+.custom-tooltip {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  color: var(--color-ink) !important;
+  text-shadow: 0 0 3px var(--color-paper), -1px -1px 0 var(--color-paper), 1px -1px 0 var(--color-paper), -1px 1px 0 var(--color-paper), 1px 1px 0 var(--color-paper);
+  white-space: nowrap !important;
+}
+.custom-tooltip::before {
+  display: none !important; /* Hide tooltip arrow */
+}
+.departure-tooltip {
+  font-size: 11px;
+  opacity: 0.8;
+}
+.halo-tooltip {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.avatar-wrapper {
+  position: relative;
+  z-index: 10;
+}
+.avatar-shadow {
+  width: 20px;
+  height: 4px;
+  background-color: rgba(51, 51, 51, 0.15);
+  border-radius: 50%;
+  margin-top: 4px;
+  filter: blur(1px);
+  transition: all 0.3s ease;
+}
+.group:hover .avatar-shadow {
+  transform: scale(0.8);
+  opacity: 0.5;
+}
+
+
+
